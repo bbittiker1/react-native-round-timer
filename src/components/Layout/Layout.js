@@ -1,14 +1,14 @@
-import React, {useState, useRef, useEffect} from "react";
+import React from "react";
 import { Route, Switch } from "react-router-dom";
-import { connect, useDispatch } from "react-redux";
+import { connect } from "react-redux";
 
 import { makeStyles  } from "@material-ui/core/styles";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import {ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import IdleTimer from "react-idle-timer";
+// import IdleTimer from "react-idle-timer";
 
-import config from "../../config";
+// import config from "../../config";
 // import { logoutUser } from "../../actions/auth";
 // import ChangelogAppBar from "../AppBar/AppBar";
 // import ChangelogSideBar from "../Sidebar/Sidebar";
@@ -44,23 +44,23 @@ const useStyles = makeStyles(theme => ({
 
 export default function Layout() {
 	const classes = useStyles();
-	const dispatch = useDispatch();
-	const [showModal, setShowModal] = useState( false );
-
-	const timeout = config.idleTimeout;
-
-	const callbackRef = useRef();
-
-	const onAction = () => {};
-	const onActive = () => {};
-
-	const resetTimer = () => {
-		callbackRef.current.reset();
-	};
-
-	const onIdle = () => {
-		setShowModal(true);
-	};
+	// const dispatch = useDispatch();
+	// const [showModal, setShowModal] = useState( false );
+	//
+	// const timeout = config.idleTimeout;
+	//
+	// const callbackRef = useRef();
+	//
+	// const onAction = () => {};
+	// const onActive = () => {};
+	//
+	// const resetTimer = () => {
+	// 	callbackRef.current.reset();
+	// };
+	//
+	// const onIdle = () => {
+	// 	setShowModal(true);
+	// };
 
 	// const handleClose = () => {
 	// 	setShowModal(false);

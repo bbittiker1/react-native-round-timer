@@ -24,7 +24,8 @@
     "react-toastify": "^5.5.0",
     "redux": "^4.0.5",
     "redux-logger": "^3.0.6",
-    "redux-thunk": "^2.3.0"
+    "redux-thunk": "^2.3.0",
+    "uifx": "^2.0.7"
   },
   "scripts": {
     "start": "REACT_APP_VERSION=$npm_package_version, cp ./config/config.local.js ./public/config.js; PORT=3002 react-scripts start --no-cache ",
