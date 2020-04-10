@@ -36,10 +36,6 @@ class Timer2 {
 		this.name = name;
 		this.roundNumber = roundNumber;
 	}
-	//
-	// clear()  {
-	// 	clearInterval(this.timerId)
-	// };
 }
 
 class Round {
@@ -52,28 +48,34 @@ class Round {
 export default function Dashboard() {
 	const classes = useStyles(theme);
 
-	const initRounds = 2;
+	const numRounds = 3;
+	const notifySeconds = 3;
+	const roundSeconds = 5;
+
+	const breakNotifySeconds = 3;
+
 
 	const rounds = [];
 
-	// for (let i = 0; i < 2; i++) {
-			// Notify round
-		rounds.push(new Timer2(3, "notify", 0));
-		rounds.push(new Timer2(5, "round", 1));
-		rounds.push(new Timer2(3, "notify", 0));
-		rounds.push(new Timer2(5, "round", 2));
+	const loadTimer = (type, roundNumber) => {
+		return new Timer2(type === "notify" ? notifySeconds : roundSeconds, type, roundNumber)
+	};
 
-
-		// rounds.push(new Round(new Timer2(3, "notify"), new Timer2(5, "round")));
-		// rounds.push(new Round(new Timer2(3, "notify"), new Timer2(5, "round")));
-		// rounds.push(new Round(new Timer2(3, "notify"), new Timer2(5, "round")));
-	// }
-
-
+	for (let i = 0; i < numRounds; i++) {
+		rounds.push(loadTimer("notify", i));
+		rounds.push(loadTimer("round", i + 1));
+	}
 
 	return (
 		<div className={classes.root} >
-			<RoundTimer initSeconds={5} initNotifySeconds={5} initRounds={rounds} />
+			<RoundTimer initRoundSeconds={5}
+						initNotifySeconds={2}
+						initBreakSeconds={5}
+						initRounds={rounds}
+						initNumRounds={numRounds}
+						initBreakNotifySeconds={breakNotifySeconds}
+
+			/>
 		</div>
 	);
 }

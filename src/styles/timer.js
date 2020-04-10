@@ -42,7 +42,8 @@ export const timerStyles =  makeStyles(theme => ({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        marginRight: "2px"
+        marginRight: "2px",
+        spaceBetween: "2px"
     },
     buttonSpacer: {
         marginRight: "5px"
@@ -53,7 +54,8 @@ export const timerStyles =  makeStyles(theme => ({
     },
     pause: {
         backgroundColor: theme.palette.info.main,
-        color: "white"
+        color: "white",
+        marginLeft: "2px"
     },
     stop: {
         backgroundColor: theme.palette.secondary.main,
@@ -80,4 +82,12 @@ export const timerStyles =  makeStyles(theme => ({
         fontWeight: 500,
         textAlign: "center"
     },
+    roundMeta: {
+        color: "#919eab",
+        fontFamily: "'Nunito', sans-serif",
+        fontSize: 16,
+        fontWeight: 500,
+        textAlign: "left"
+    }
+
 }));
