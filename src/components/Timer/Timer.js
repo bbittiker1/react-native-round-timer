@@ -217,12 +217,12 @@ export function RoundTimer(props) {
 										</Button>
 										}
 
-										{  ((currState === states.STARTED && !isPaused ) || ( isPaused && hasRoundStarted ) ) &&
+										{  (currState === states.STARTED || (currState === states.PAUSED && hasRoundStarted)) &&
 										<Button onClick={() => handlePause() }
 												variant="contained"
 												className={classes.pause}
 												disabled={ (currState === states.PAUSED && hasRoundStarted ) }>
-											{ (currState === states.PAUSED && hasRoundStarted ) ? "Pause" : (currState === states.PAUSED) ? "Resume" : "Pause" }
+											{ (currState === states.PAUSED && hasRoundStarted ) ? "Resume" : "Pause" }
 										</Button>
 										}
 									</div>
