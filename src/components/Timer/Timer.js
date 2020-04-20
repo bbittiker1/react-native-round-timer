@@ -1,22 +1,23 @@
 import React, { useState } from "react";
 import { useEffect, useRef } from "react";
 import clsx from "clsx";
-// import UIfx from "uifx";
+import UIfx from "uifx";
+
 //
 // import Sound from 'react-sound';
 //
-// import { loadAudioResource } from "../../selectors";
-// import bellAudio from "../../sounds/bell.mp3";
-// import longBellAudio from "../../sounds/long-bell.mp3";
-// import getReadyAudio from "../../sounds/get-ready.mp3";
-// import threeBellAudio from "../../sounds/3-bells.mp3";
+import bellAudio from "../../sounds/bell.mp3";
+import longBellAudio from "../../sounds/long-bell.mp3";
+import getReadyAudio from "../../sounds/get-ready.mp3";
+import threeBellAudio from "../../sounds/3-bells.mp3";
 
 import { Button, Container, Typography, Card, CardContent, CardHeader, Grid } from "@material-ui/core";
 
 import { timerStyles } from "../../styles/timer";
 import {load} from "dotenv";
 
-import { translateSeconds, getKeyByValue } from "../../selectors";
+import { translateSeconds, getKeyByValue, loadAudioResource } from "../../selectors";
+
 
 
 const useInterval = (callback, delay, currState) => {
@@ -66,11 +67,13 @@ export function RoundTimer(props) {
 
 	let currRound = useRef();
 
+	const bell = loadAudioResource(bellAudio);
+	const threeBells = loadAudioResource(threeBellAudio);
+	const getReady = loadAudioResource(getReadyAudio);
+	const longBell = loadAudioResource(longBellAudio);
+
 	const ticker = (currState) => {
 		if (currState === states.STARTED && seconds > 0) {
-			// setFightMessage(currRound.current.roundMessage);
-			// console.log("tick: seconds:: ", seconds);
-
 			setSeconds(seconds => seconds - 1);
 		}
 	};
@@ -78,23 +81,9 @@ export function RoundTimer(props) {
 	useInterval(() => ticker(currState), delay );
 
 	useEffect(() => {
-
-		// if(seconds === 0 ) {
-		// 	console.log("seconds is 0");
-		// }
-
 		switch(currState) {
 			case states.READY:
-				// currRound.current = rounds.shift();
-
-				// console.log("rounds: ", rounds);
-				// console.log("currRound: ", currRound);
-
 				setFightMessage(initRoundMessage);
-				// setSeconds(0);
-
-
-
 				break;
 			case states.STARTED:
 				setFightMessage(currRound.current.roundMessage);
@@ -103,25 +92,20 @@ export function RoundTimer(props) {
 					if (rounds.length === 0) {
 						setCurrState(states.FINISHED);
 					} else {
+						currRound.current = rounds.shift();
+
 						//
 						// Set small delay so user can see "00:00"
 						// before next round starts.
 						//
-
-						currRound.current = rounds.shift();
-
 						setTimeout(() => {
-							// setRoundStarted(false);
-
 							setSeconds(currRound.current.seconds);
 							setFightMessage(currRound.current.roundMessage);
-							// setCurrState(states.STARTED)
 						}, 1000);
 					}
 				} else {
 					if(!hasRoundStarted) {
 						setRoundStarted(true);
-
 						setSeconds(initBreakSeconds);
 						setRoundStarted(true);
 						setCurrState(states.PAUSED);
@@ -148,9 +132,7 @@ export function RoundTimer(props) {
 				console.log("Invalid state: " , currState);
 		}
 
-		// console.log( getKeyByValue(states, currState) );
-
-	}, [currState, seconds]);
+	}, [currState, seconds, hasRoundStarted]);
 
 	const handleReset = () => {
 		setRounds(resetFight(initNumRounds, initRoundNotifySeconds, initRoundSeconds));
@@ -172,30 +154,34 @@ export function RoundTimer(props) {
 	};
 
 	const handleStart = () => {
-
-			setStartButtonDisabled(true);
-
-			currRound.current = rounds.shift();
-
-			setTimeout(() => {
-				setCurrState(states.STARTED);
-				// setSeconds(initBreakSeconds);
-				setStartButtonDisabled(false);
-			}, 1000);
-
-	};
-
-	const handleStop = () => {
 		setStartButtonDisabled(true);
 
-		// getReady.play();
+		currRound.current = rounds.shift();
+
+		getReady.play();
+
 		setTimeout(() => {
-			setRounds(resetFight(initNumRounds, initRoundNotifySeconds, initRoundSeconds));
-			setCurrState(states.READY);
-			setSeconds(rounds[1].seconds);
+			setCurrState(states.STARTED);
+			// setSeconds(initBreakSeconds);
 			setStartButtonDisabled(false);
 		}, 1000);
 	};
+
+	// const handleStop = () => {
+	// 	setStartButtonDisabled(true);
+	//
+	// 	// getReady.play();
+	// 	setTimeout(() => {
+	// 		setRounds(resetFight(initNumRounds, initRoundNotifySeconds, initRoundSeconds));
+	// 		setCurrState(states.READY);
+	// 		setSeconds(rounds[1].seconds);
+	// 		setStartButtonDisabled(false);
+	// 	}, 1000);
+	// };
+
+	// const playAudio = () => {
+	// 	getReady.play();
+	// };
 
 	return (
 		<Container component="main" className={classes.root}>
@@ -231,7 +217,7 @@ export function RoundTimer(props) {
 										</Button>
 										}
 
-										{  ((currState === states.STARTED )  || (currState === states.PAUSED && hasRoundStarted ) ) &&
+										{  ((currState === states.STARTED && !isPaused ) || ( isPaused && hasRoundStarted ) ) &&
 										<Button onClick={() => handlePause() }
 												variant="contained"
 												className={classes.pause}
@@ -265,11 +251,25 @@ export function RoundTimer(props) {
 										}
 									</div>
 							</Grid>
+							<Grid item xs={12}>
+								<Typography component="h6" variant="h6">{ `Rounds ${ translateSeconds(initRoundSeconds)} / Notice ${initRoundNotifySeconds}s` }</Typography>
+								<Typography component="h6" variant="h6">{ `Breaks ${ translateSeconds(initBreakSeconds)} / Notice ${initBreakNotifySeconds}s` }</Typography>
+							</Grid>
+
 
 							<Grid item xs={12}>
-								<Typography component="h6" variant="h6">State: { getKeyByValue(states, currState) }</Typography>
-								<Typography component="h6" variant="h6">Rounds: { rounds.length.toString() }</Typography>
-								<Typography component="h6" variant="h6">Seconds: { seconds }</Typography>
+								{/*<Typography component="h6" variant="h6">State: { getKeyByValue(states, currState) }</Typography>*/}
+								{/*<Typography component="h6" variant="h6">Rounds: { rounds.length.toString() }</Typography>*/}
+								{/*<Typography component="h6" variant="h6">Seconds: { seconds }</Typography>*/}
+
+								{/*<div>*/}
+								{/*	<button onClick={() => playAudio}>*/}
+								{/*		<span>Play Audio</span>*/}
+								{/*	</button>*/}
+								{/*	<audio className="audio-element">*/}
+								{/*		<source src="https://api.coderrocketfuel.com/assets/pomodoro-times-up.mp3"></source>*/}
+								{/*	</audio>*/}
+								{/*</div>*/}
 							</Grid>
 						</Grid>
 					</div>
