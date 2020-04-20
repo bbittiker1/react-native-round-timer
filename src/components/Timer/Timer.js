@@ -20,7 +20,7 @@ import { translateSeconds, getKeyByValue, loadAudioResource } from "../../select
 
 
 
-const useInterval = (callback, delay, currState) => {
+const useInterval = (callback, delay, currState, isPaused) => {
 	const savedCallback = useRef();
 
 	// Remember the latest function.
@@ -34,12 +34,12 @@ const useInterval = (callback, delay, currState) => {
 			savedCallback.current();
 		}
 
-		if (delay !== null && currState !== states.STARTED) {
+		if (delay !== null && !isPaused && currState !== states.STARTED) {
 			let id = setInterval(tick, delay);
 			return () => clearInterval(id);
 		}
 
-	}, [delay, currState]);
+	}, [delay, currState, isPaused]);
 };
 
 const states = {
@@ -57,6 +57,7 @@ export function RoundTimer(props) {
 	const [delay, setDelay] = useState(1000 );
 	const [seconds, setSeconds] = useState( initRoundSeconds );
 	const [isPaused, setPaused] = useState( false );
+
 	const [hasRoundStarted, setRoundStarted] = useState (false);
 	const [fightMessage, setFightMessage] = useState (initRoundMessage);
 	const [fightMessageTitle, setFightMessageTitle] = useState (`${initNumRounds} Rounds`);
@@ -107,17 +108,17 @@ export function RoundTimer(props) {
 					if(!hasRoundStarted) {
 						setRoundStarted(true);
 						setSeconds(initBreakSeconds);
-						setRoundStarted(true);
-						setCurrState(states.PAUSED);
 
-						setTimeout(() => {
+						// setTimeout(() => {
 							setCurrState(states.STARTED);
-						}, 1000);
+							setDelay(1000);
+						// }, 1000);
 					}
 				}
 
 				break;
 			case states.PAUSED:
+				// setPaused(!isPaused);
 				break;
 			case states.FINISHED:
 				setSeconds(0);
@@ -132,7 +133,7 @@ export function RoundTimer(props) {
 				console.log("Invalid state: " , currState);
 		}
 
-	}, [currState, seconds, hasRoundStarted]);
+	}, [currState, seconds, hasRoundStarted, delay]);
 
 	const handleReset = () => {
 		setRounds(resetFight(initNumRounds, initRoundNotifySeconds, initRoundSeconds));
@@ -144,9 +145,11 @@ export function RoundTimer(props) {
 	const handlePause = () => {
 		if( currState === states.PAUSED ) {
 			setTimeout(() => {
+				setPaused(false);
 				setCurrState(states.STARTED);
 			}, 1000);
 		} else {
+			setPaused(true);
 			setCurrState(states.PAUSED);
 		}
 
@@ -155,33 +158,19 @@ export function RoundTimer(props) {
 
 	const handleStart = () => {
 		setStartButtonDisabled(true);
-
+		setPaused(true);
 		currRound.current = rounds.shift();
+		setDelay(null);
 
-		getReady.play();
+		// getReady.play();
 
 		setTimeout(() => {
+
 			setCurrState(states.STARTED);
-			// setSeconds(initBreakSeconds);
+			setPaused(false);
 			setStartButtonDisabled(false);
 		}, 1000);
 	};
-
-	// const handleStop = () => {
-	// 	setStartButtonDisabled(true);
-	//
-	// 	// getReady.play();
-	// 	setTimeout(() => {
-	// 		setRounds(resetFight(initNumRounds, initRoundNotifySeconds, initRoundSeconds));
-	// 		setCurrState(states.READY);
-	// 		setSeconds(rounds[1].seconds);
-	// 		setStartButtonDisabled(false);
-	// 	}, 1000);
-	// };
-
-	// const playAudio = () => {
-	// 	getReady.play();
-	// };
 
 	return (
 		<Container component="main" className={classes.root}>
@@ -217,14 +206,23 @@ export function RoundTimer(props) {
 										</Button>
 										}
 
-										{  (currState === states.STARTED || (currState === states.PAUSED && hasRoundStarted)) &&
+										{ (currState === states.STARTED || currState === states.PAUSED) &&
 										<Button onClick={() => handlePause() }
 												variant="contained"
 												className={classes.pause}
-												disabled={ (currState === states.PAUSED && hasRoundStarted ) }>
-											{ (currState === states.PAUSED && hasRoundStarted ) ? "Resume" : "Pause" }
+												disabled={false}>
+											{ isPaused ? "Resume" : "Pause" }
 										</Button>
 										}
+
+										{/*{  isPaused  &&*/}
+										{/*<Button onClick={() => handlePause() }*/}
+										{/*		variant="contained"*/}
+										{/*		className={classes.pause}*/}
+										{/*		disabled={false}>*/}
+										{/*	Resume*/}
+										{/*</Button>*/}
+										{/*}*/}
 									</div>
 
 									<div>
@@ -258,9 +256,13 @@ export function RoundTimer(props) {
 
 
 							<Grid item xs={12}>
-								{/*<Typography component="h6" variant="h6">State: { getKeyByValue(states, currState) }</Typography>*/}
-								{/*<Typography component="h6" variant="h6">Rounds: { rounds.length.toString() }</Typography>*/}
-								{/*<Typography component="h6" variant="h6">Seconds: { seconds }</Typography>*/}
+								<Typography component="h6" variant="h6">State: { getKeyByValue(states, currState) }</Typography>
+								<Typography component="h6" variant="h6">Rounds: { rounds.length.toString() }</Typography>
+								<Typography component="h6" variant="h6">Seconds: { seconds }</Typography>
+								<Typography component="h6" variant="h6">Seconds: { seconds }</Typography>
+								<Typography component="h6" variant="h6">isPaused: { isPaused.toString() }</Typography>
+								<Typography component="h6" variant="h6">hasRoundStarted: { hasRoundStarted.toString() }</Typography>
+								{/*<Typography component="h6" variant="h6">isStartPaused: { isStartPaused.toString() }</Typography>*/}
 
 								{/*<div>*/}
 								{/*	<button onClick={() => playAudio}>*/}
