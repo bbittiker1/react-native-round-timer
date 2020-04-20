@@ -31,50 +31,66 @@ const useStyles = makeStyles(theme => ({
 
 
 class Timer2 {
-	constructor(seconds, name, roundNumber) {
+	constructor(seconds, type, roundNumber, roundMessage) {
 		this.seconds = seconds;
-		this.name = name;
+		this.type = type;
 		this.roundNumber = roundNumber;
+		this.roundMessage = roundMessage;
 	}
 }
-
-class Round {
-	constructor(notifyTimer, roundTimer) {
-		this.notifyTimer = notifyTimer;
-		this.roundTimer = roundTimer;
-	}
-};
 
 export default function Dashboard() {
 	const classes = useStyles(theme);
 
-	const numRounds = 3;
-	const notifySeconds = 3;
+	const numRounds = 2;
+	const breakSeconds = 3;
 	const roundSeconds = 5;
-
 	const breakNotifySeconds = 3;
 
 
-	const rounds = [];
+	// const roundsMaster = [];
+	// const rounds =
 
-	const loadTimer = (type, roundNumber) => {
-		return new Timer2(type === "notify" ? notifySeconds : roundSeconds, type, roundNumber)
+	const loadTimers = (numRounds, breakSeconds, roundSeconds) => {
+		let roundTimers = [];
+		for (let i = 0; i < numRounds; i++) {
+			const breakRoundMessage = (i === 0) ? "Get Ready" : "Break";
+			const fightRoundNumber = i + 1;
+			const fightRoundMessage = `Round ${fightRoundNumber} of ${numRounds}`;
+
+			const breakTimer = new Timer2(
+				breakSeconds,
+				"notify",
+				i,
+				breakRoundMessage);
+
+			const roundTimer = new Timer2(
+				roundSeconds,
+				"round",
+				fightRoundNumber,
+				fightRoundMessage);
+
+			roundTimers.push(breakTimer);
+			roundTimers.push(roundTimer);
+		}
+
+		return roundTimers;
 	};
 
-	for (let i = 0; i < numRounds; i++) {
-		rounds.push(loadTimer("notify", i));
-		rounds.push(loadTimer("round", i + 1));
-	}
+	const roundTimers = loadTimers(numRounds, breakSeconds, roundSeconds);
+
+	console.log("roundTimers: " , roundTimers);
 
 	return (
-		<div className={classes.root} >
-			<RoundTimer initRoundSeconds={5}
-						initNotifySeconds={2}
-						initBreakSeconds={5}
-						initRounds={rounds}
-						initNumRounds={numRounds}
+		<div className={classes.root}>
+			<RoundTimer initRoundSeconds={roundSeconds}
+						initRoundNotifySeconds={3}
+						initBreakSeconds={breakSeconds}
 						initBreakNotifySeconds={breakNotifySeconds}
-
+						initRounds={ roundTimers }
+						initNumRounds={numRounds}
+						initRoundMessage={`Round 1 of ${numRounds}`}
+						resetFight={ loadTimers }
 			/>
 		</div>
 	);

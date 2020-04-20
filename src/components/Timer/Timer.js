@@ -1,22 +1,25 @@
 import React, { useState } from "react";
 import { useEffect, useRef } from "react";
 import clsx from "clsx";
-import UIfx from "uifx";
+// import UIfx from "uifx";
+//
+// import Sound from 'react-sound';
+//
+// import { loadAudioResource } from "../../selectors";
+// import bellAudio from "../../sounds/bell.mp3";
+// import longBellAudio from "../../sounds/long-bell.mp3";
+// import getReadyAudio from "../../sounds/get-ready.mp3";
+// import threeBellAudio from "../../sounds/3-bells.mp3";
 
-import Sound from 'react-sound';
-
-import { loadAudioResource } from "../../selectors";
-import bellAudio from "../../sounds/bell.mp3";
-import longBellAudio from "../../sounds/long-bell.mp3";
-import getReadyAudio from "../../sounds/get-ready.mp3";
-import threeBellAudio from "../../sounds/3-bells.mp3";
-
-import { Avatar, Button, Container, Typography, Card, CardContent, CardHeader, Grid } from "@material-ui/core";
+import { Button, Container, Typography, Card, CardContent, CardHeader, Grid } from "@material-ui/core";
 
 import { timerStyles } from "../../styles/timer";
+import {load} from "dotenv";
+
+import { translateSeconds, getKeyByValue } from "../../selectors";
 
 
-const useInterval = (callback, delay) => {
+const useInterval = (callback, delay, currState) => {
 	const savedCallback = useRef();
 
 	// Remember the latest function.
@@ -29,173 +32,169 @@ const useInterval = (callback, delay) => {
 		function tick() {
 			savedCallback.current();
 		}
-		if (delay !== null) {
+
+		if (delay !== null && currState !== states.STARTED) {
 			let id = setInterval(tick, delay);
 			return () => clearInterval(id);
 		}
-	}, [delay]);
+
+	}, [delay, currState]);
 };
 
+const states = {
+	"READY": 0,
+	"STARTED": 1,
+	"PAUSED": 2,
+	"FINISHED": 3,
+	"RESET": 4
+};
 
 export function RoundTimer(props) {
-	const { initRoundSeconds, initBreakSeconds, initNotifySeconds, initRounds, initNumRounds, initNumTimers,
-		initBreakNotifySeconds } = props;
+	const { initRoundSeconds, initBreakSeconds, initRoundNotifySeconds, initRounds, initNumRounds,
+		initBreakNotifySeconds, initRoundMessage, resetFight, timer } = props;
 
 	const [delay, setDelay] = useState(1000 );
-	const [seconds, setSeconds] = useState( initRounds[0].seconds );
+	const [seconds, setSeconds] = useState( initRoundSeconds );
 	const [isPaused, setPaused] = useState( false );
-	const [isRoundComplete, setRoundComplete] = useState( false );
-	const [isFightComplete, setFightComplete] = useState( false );
 	const [hasRoundStarted, setRoundStarted] = useState (false);
-	const [hasFightStarted, setFightStarted] = useState (false);
-
-	const [numRounds, setNumRounds] = useState ( initNumRounds );
-	const [numTimers, setNumTimers] = useState ( initRounds.length );
-	const [roundSeconds, setRoundSeconds] = useState ( initRoundSeconds );
-	const [breakSeconds, setBreakSeconds] = useState ( initBreakSeconds );
-	const [breakNotifySeconds, setBreakNotifySeconds] = useState ( initBreakNotifySeconds );
-	const [notifySeconds, setNotifySeconds] = useState( initNotifySeconds );
-
-	const [fightMsg, setFightMsg] = useState (`${initNumRounds} Rounds`);
-	const [fightMsgTitle, setFightMsgTitle] = useState (`${initNumRounds} Rounds`);
-
-
-	// const [currRound, setCurrRound] = useState(0);
+	const [fightMessage, setFightMessage] = useState (initRoundMessage);
+	const [fightMessageTitle, setFightMessageTitle] = useState (`${initNumRounds} Rounds`);
+	const [currState, setCurrState] = useState(states.READY);
 	const classes = timerStyles();
 	const [rounds, setRounds] = useState(initRounds);
 	const [startButtonDisabled, setStartButtonDisabled] = useState(false);
 
-	let currRound = useRef(0);
+	let currRound = useRef();
 
-	// const audioConfig = getAudioConfig();
-	// const bell = loadAudioResource(bellAudio);
-	// const threeBells = loadAudioResource(threeBellAudio);
-	// // const getReady = loadAudioResource(getReadyAudio);
-	// const longBell = loadAudioResource(longBellAudio);
+	const ticker = (currState) => {
+		if (currState === states.STARTED && seconds > 0) {
+			// setFightMessage(currRound.current.roundMessage);
+			// console.log("tick: seconds:: ", seconds);
 
-	const bell = new UIfx(
-		bellAudio,
-		{
-			volume: 0.4, // number between 0.0 ~ 1.0
-			throttleMs: 100
+			setSeconds(seconds => seconds - 1);
 		}
-	);
-	const threeBells = new UIfx(
-		threeBellAudio,
-		{
-			volume: 0.4, // number between 0.0 ~ 1.0
-			throttleMs: 100
-		}
-	);
-
-	// const getReady = new UIfx(
-	// 	getReadyAudio,
-	// 	{
-	// 		volume: 0.4, // number between 0.0 ~ 1.0
-	// 		throttleMs: 100
-	// 	}
-	// );
-
-	const getReady = new UIfx({
-		asset: getReadyAudio,
-		volume: 0.4, // number between 0.0 ~ 1.0
-		throttleMs: 100,
-
-	});
-
-	const longBell = new UIfx(
-		longBellAudio,
-		{
-			volume: 0.4, // number between 0.0 ~ 1.0
-			throttleMs: 100
-		}
-	);
-
-
-
-	useInterval(() => {
-		if(( hasRoundStarted && !isPaused ) && currRound.current < numTimers) {
-			setSeconds( seconds => seconds - 1 );
-		}
-	}, delay );
-
-	useEffect(() => {
-		if( seconds === 0 && hasRoundStarted ) {
-			setState(false,  true, false, false, true);
-
-			currRound.current = (currRound.current + 1);
-
-			if(currRound.current < numTimers) {
-				setSeconds(rounds[currRound.current].seconds);
-
-				if (rounds[currRound.current].name === "notify") {
-					bell.play();
-					setFightMsg("Break");
-
-					setTimeout(() => {
-						setState(false, true, true, false, true);
-					}, 1000);
-				} else {
-					longBell.play();
-					setFightMsg(`Round ${ rounds[currRound.current].roundNumber }`);
-
-					setTimeout(() => {
-						setState(false,  true, true, false, true);
-					}, 1000);
-				}
-			} else {
-				threeBells.play();
-
-				setTimeout(() => {
-					setFightMsg(`Finished!!!!!`);
-					setState(false,  true, false, true, false);
-				}, 1000);
-			}
-		}
-	}, [numTimers, isRoundComplete, isPaused, seconds, rounds, longBell] );
-
-	const setState = (isPaused, isRoundComplete, hasRoundStarted, isFightComplete = false, hasFightStarted = false ) => {
-		// setTimeout(() => {
-			setPaused(isPaused);
-			setRoundComplete(isRoundComplete);
-			setRoundStarted(hasRoundStarted);
-			setFightComplete(isFightComplete);
-			setFightStarted(hasFightStarted);
-		// }, 1000);
 	};
 
+	useInterval(() => ticker(currState), delay );
+
+	useEffect(() => {
+
+		// if(seconds === 0 ) {
+		// 	console.log("seconds is 0");
+		// }
+
+		switch(currState) {
+			case states.READY:
+				// currRound.current = rounds.shift();
+
+				// console.log("rounds: ", rounds);
+				// console.log("currRound: ", currRound);
+
+				setFightMessage(initRoundMessage);
+				// setSeconds(0);
+
+
+
+				break;
+			case states.STARTED:
+				setFightMessage(currRound.current.roundMessage);
+
+				if(seconds === 0) {
+					if (rounds.length === 0) {
+						setCurrState(states.FINISHED);
+					} else {
+						//
+						// Set small delay so user can see "00:00"
+						// before next round starts.
+						//
+
+						currRound.current = rounds.shift();
+
+						setTimeout(() => {
+							// setRoundStarted(false);
+
+							setSeconds(currRound.current.seconds);
+							setFightMessage(currRound.current.roundMessage);
+							// setCurrState(states.STARTED)
+						}, 1000);
+					}
+				} else {
+					if(!hasRoundStarted) {
+						setRoundStarted(true);
+
+						setSeconds(initBreakSeconds);
+						setRoundStarted(true);
+						setCurrState(states.PAUSED);
+
+						setTimeout(() => {
+							setCurrState(states.STARTED);
+						}, 1000);
+					}
+				}
+
+				break;
+			case states.PAUSED:
+				break;
+			case states.FINISHED:
+				setSeconds(0);
+				setFightMessage("FINISHED");
+				break;
+			case states.RESET:
+				setCurrState(states.FINISHED);
+				setRounds(resetFight(initNumRounds, initRoundNotifySeconds, initRoundSeconds));
+				setCurrState(states.READY);
+				break;
+			default:
+				console.log("Invalid state: " , currState);
+		}
+
+		// console.log( getKeyByValue(states, currState) );
+
+	}, [currState, seconds]);
+
 	const handleReset = () => {
-		setRounds(initRounds);
-		setSeconds( rounds[0].seconds );
-		currRound.current = 0;
-		setFightMsg(`Round 1 of ${initRounds.length / 2 }`);
-		setState(false, true, false, false);
+		setRounds(resetFight(initNumRounds, initRoundNotifySeconds, initRoundSeconds));
+		setRoundStarted(false);
+		setSeconds(initRoundSeconds);
+		setCurrState(states.READY);
 	};
 
 	const handlePause = () => {
-		setState(!isPaused, false, true, false, true );
+		if( currState === states.PAUSED ) {
+			setTimeout(() => {
+				setCurrState(states.STARTED);
+			}, 1000);
+		} else {
+			setCurrState(states.PAUSED);
+		}
+
+		setCurrState((currState === states.PAUSED) ? states.STARTED : states.PAUSED);
 	};
 
 	const handleStart = () => {
-		setStartButtonDisabled(true);
-		setFightMsg("Get Ready");
 
-		getReady.play();
-		setTimeout(() => {
-			setState(false, false, true, false, true);
-			setStartButtonDisabled(false);
-		}, 1000);
-	};  
+			setStartButtonDisabled(true);
 
-	const translateSeconds = (s) => {
-		const mins = Math.floor(s / 60).toFixed(0);
-		const secs = s % 60;
+			currRound.current = rounds.shift();
 
-		return `${mins < 10 ? "0" + mins : mins}:${secs < 10 ? "0" + secs : secs}`;
+			setTimeout(() => {
+				setCurrState(states.STARTED);
+				// setSeconds(initBreakSeconds);
+				setStartButtonDisabled(false);
+			}, 1000);
+
 	};
 
-	const getPauseDisabled = (hasRoundStarted, isPaused) => {
-		return (hasRoundStarted && !isPaused);
+	const handleStop = () => {
+		setStartButtonDisabled(true);
+
+		// getReady.play();
+		setTimeout(() => {
+			setRounds(resetFight(initNumRounds, initRoundNotifySeconds, initRoundSeconds));
+			setCurrState(states.READY);
+			setSeconds(rounds[1].seconds);
+			setStartButtonDisabled(false);
+		}, 1000);
 	};
 
 	return (
@@ -207,17 +206,8 @@ export function RoundTimer(props) {
 						subheader: classes.subheader,
 						avatar: classes.avatar
 					}}
-					// avatar={
-					// 	<Avatar aria-label={"Round Timer"} className={classes.avatar} src="/glove.png">
-					// 	</Avatar>
-					// }
-					// action={
-					// 	<IconButton disabled={false} onClick={() => setReloadData(!reloadData)} title={"Refresh"}>
-					// 		<i className={isLoading ? "fa fa-refresh fa-spin" : "fa fa-refresh"}  />
-					// 	</IconButton>
-					// }
-					title={fightMsgTitle}
-					subheader={ fightMsg }
+					title={fightMessageTitle}
+					subheader={ fightMessage }
 				/>
 
 				<CardContent className={classes.container}>
@@ -232,7 +222,7 @@ export function RoundTimer(props) {
 
 							<Grid item xs={12} className={classes.buttonRow}>
 									<div className={classes.buttonSpacer}>
-										{  hasFightStarted &&
+										{ (currState === states.STARTED || currState === states.PAUSED ) &&
 										<Button onClick={ () => handleReset() }
 												variant="contained"
 												color="secondary"
@@ -241,18 +231,18 @@ export function RoundTimer(props) {
 										</Button>
 										}
 
-										{  hasFightStarted &&
+										{  ((currState === states.STARTED )  || (currState === states.PAUSED && hasRoundStarted ) ) &&
 										<Button onClick={() => handlePause() }
 												variant="contained"
 												className={classes.pause}
-												disabled={ getPauseDisabled() }>
-											{ isPaused ? "Resume" : "Pause" }
+												disabled={ (currState === states.PAUSED && hasRoundStarted ) }>
+											{ (currState === states.PAUSED && hasRoundStarted ) ? "Pause" : (currState === states.PAUSED) ? "Resume" : "Pause" }
 										</Button>
 										}
 									</div>
 
 									<div>
-										{ (!hasRoundStarted && !isFightComplete && !hasFightStarted) &&
+										{ currState === states.READY &&
 										<Button onClick={() => {
 											setStartButtonDisabled(true);
 											handleStart(); }}
@@ -266,7 +256,7 @@ export function RoundTimer(props) {
 									</div>
 
 									<div>
-										{ isFightComplete &&
+										{ currState === states.FINISHED &&
 										<Button onClick={ () => handleReset() }
 												variant="contained"
 												color="primary">
@@ -277,108 +267,14 @@ export function RoundTimer(props) {
 							</Grid>
 
 							<Grid item xs={12}>
-								<Typography component="h66" variant="h6">{ `Rounds ${ translateSeconds(initRoundSeconds)} / Notice ${notifySeconds}s` }</Typography>
-								<Typography component="h6" variant="h6">{ `Breaks ${ translateSeconds(initBreakSeconds)} / Notice ${breakNotifySeconds}s` }</Typography>
+								<Typography component="h6" variant="h6">State: { getKeyByValue(states, currState) }</Typography>
+								<Typography component="h6" variant="h6">Rounds: { rounds.length.toString() }</Typography>
+								<Typography component="h6" variant="h6">Seconds: { seconds }</Typography>
 							</Grid>
 						</Grid>
 					</div>
-
-
-
-
-					{/*<div>*/}
-
-					{/*	<div className={classes.timerRow}>*/}
-					{/*		<Typography component="h1" variant="h1">{ translateSeconds(seconds) }</Typography>*/}
-					{/*	</div>*/}
-
-					{/*	<div className={classes.buttonRow} >*/}
-					{/*		<div className={classes.buttonSpacer}>*/}
-					{/*			{  hasFightStarted &&*/}
-					{/*			<Button onClick={ () => handleReset() }*/}
-					{/*					variant="contained"*/}
-					{/*					color="secondary"*/}
-					{/*				styles={{marginRight: "20px"}}>*/}
-					{/*				Stop*/}
-					{/*			</Button>*/}
-					{/*			}*/}
-
-					{/*			{  hasFightStarted &&*/}
-					{/*			<Button onClick={() => handlePause() }*/}
-					{/*					variant="contained"*/}
-					{/*					className={classes.pause}*/}
-					{/*					disabled={ getPauseDisabled() }>*/}
-					{/*				{ isPaused ? "Resume" : "Pause" }*/}
-					{/*			</Button>*/}
-					{/*			}*/}
-					{/*		</div>*/}
-
-					{/*		<div>*/}
-					{/*			{ (!hasRoundStarted && !isFightComplete && !hasFightStarted) &&*/}
-					{/*			<Button onClick={() => {*/}
-					{/*				setStartButtonDisabled(true);*/}
-					{/*				handleStart(); }}*/}
-					{/*					variant="contained"*/}
-					{/*					className={clsx(classes.start, { [classes.pause]: hasRoundStarted, })}*/}
-					{/*					disabled={startButtonDisabled}*/}
-					{/*			>*/}
-					{/*				Start*/}
-					{/*			</Button>*/}
-					{/*			}*/}
-					{/*		</div>*/}
-
-					{/*		<div>*/}
-					{/*			{ isFightComplete &&*/}
-					{/*			<Button onClick={ () => handleReset() }*/}
-					{/*					variant="contained"*/}
-					{/*					color="primary">*/}
-					{/*				Reset*/}
-					{/*			</Button>*/}
-					{/*			}*/}
-					{/*		</div>*/}
-					{/*	</div>*/}
-					{/*</div>*/}
-
-					{/*<div>*/}
-
-
-					{/*	/!*<h4>Delay: { delay }</h4>*!/*/}
-					{/*	/!*<h4>Paused: { isPaused.toString() }</h4>*!/*/}
-					{/*	/!*<h4>Complete: { isRoundComplete.toString() }</h4>*!/*/}
-					{/*	/!*<h4>Started: { hasRoundStarted.toString() }</h4>*!/*/}
-					{/*	/!*<h4>CurrRound: { currRound.current.toString() }</h4>*!/*/}
-					{/*	/!*<h4>NumRounds: { numRounds }</h4>*!/*/}
-					{/*	/!*<h4>Curr Round Name: { getCurrRoundName() }</h4>*!/*/}
-					{/*	/!*<h4>Curr Round Seconds: { getCurrRoundSeconds() }</h4>*!/*/}
-					{/*	/!*<h4>InitRounds: { initRounds.toString() }</h4>*!/*/}
-					{/*</div>*/}
-
-
-
 				</CardContent>
 			</Card>
-
-			{/*<div className={classes.timerRow}>*/}
-			{/*	<Typography component="h5" variant="h5">{ `Rounds ${ translateSeconds(initRoundSeconds)} / Notice ${notifySeconds}s` }</Typography>*/}
-			{/*</div>*/}
-			{/*<div className={classes.timerRow}>*/}
-			{/*	<Typography component="h5" variant="h5">{ `Breaks ${ translateSeconds(initBreakSeconds)} / Notice ${breakNotifySeconds}s` }</Typography>*/}
-			{/*</div>*/}
-
-
-
-			{/*</div>*/}
-				{/*</form>*/}
-			{/*</div>*/}
-
-			{/*<Sound*/}
-			{/*	url={getReadyAudio}*/}
-			{/*	playStatus={hasRoundStarted}*/}
-			{/*	// playFromPosition={300 /* in milliseconds *!/*/}
-			{/*	// onLoading={this.handleSongLoading}*/}
-			{/*	// onPlaying={this.handleSongPlaying}*/}
-			{/*	// onFinishedPlaying={this.handleSongFinishedPlaying}*/}
-			{/*/>*/}
 		</Container>
 	);
 

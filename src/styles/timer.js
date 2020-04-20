@@ -17,7 +17,7 @@ export const timerStyles =  makeStyles(theme => ({
     container: {
         display: "flex",
         margin: "0 auto",
-        height: "260px",
+        height: "500px",
         width: "100%",
         alignItems: "center",
         justifyContent: "center"
