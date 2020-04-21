@@ -122,7 +122,7 @@ export function RoundTimer(props) {
 				break;
 			case states.FINISHED:
 				setSeconds(0);
-				setFightMessage("FINISHED");
+				setFightMessage("Finished!!!");
 				break;
 			case states.RESET:
 				setCurrState(states.FINISHED);
