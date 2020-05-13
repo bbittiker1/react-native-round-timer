@@ -6,12 +6,15 @@ import { timerStyles } from "../../styles/timer";
 
 
 
+
+
 const translateSeconds = (seconds) => {
 	const mins = Math.floor(seconds / 60).toFixed(0);
 	const _seconds = seconds % 60;
 
-	console.log(`${mins < 10 ? "0" + mins : mins}:${_seconds < 10 ? "0" + _seconds : _seconds}`);
+	const secondsDisplay = `${mins < 10 ? "0" + mins : mins}:${_seconds < 10 ? "0" + _seconds : _seconds}`;
 
+	// setSecondsDisplay(secondsDisplay);
 	document.getElementById("secondsDisplay").innerHTML =
 		`${mins < 10 ? "0" + mins : mins}:${_seconds < 10 ? "0" + _seconds : _seconds}`;
 };
@@ -62,14 +65,18 @@ const setRoundMessage = (msg) => {
 	document.getElementById("roundMessage").innerHTML = msg;
 };
 
+const setSecondsDisplay = (seconds) => {
+	document.getElementById("secondsDisplay").innerHTML = seconds;
+};
+
 const nextRound = () => {
 	if(myTimers.length > 0) {
 		currTimer = myTimers.shift();
 		setRoundMessage(currTimer.message);
 		currTimer.start();
 	} else {
-		currTimer.stop();
-		console.log("fight ended.");
+		// currTimer.stop();
+		setRoundMessage("Fight ended!");
 	}
 };
 
@@ -110,7 +117,7 @@ function loadTimers() {
 }
 
 export function RoundTimer(props) {
-	const [msg, setMsg] = useState(null);
+	// const [msg, setMsg] = useState(null);
 	const [seconds, setSeconds] = useState(0);
 
 	const classes = timerStyles();
@@ -133,6 +140,7 @@ export function RoundTimer(props) {
 		}
 
 		setSeconds(currTimer.seconds);
+		setRoundMessage(currTimer.message);
 		currTimer.start();
 	};
 
@@ -163,7 +171,6 @@ export function RoundTimer(props) {
             </Grid>
 
 			<Grid item xs={12}>
-				{/*<Typography component="h6" variant="h6">Remaining: { translateSeconds(seconds) }</Typography>*/}
 				<Typography component="h6" variant="h6" >
 					<div id="secondsDisplay" />
 				</Typography>
