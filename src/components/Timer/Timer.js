@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 
 import { Button, Typography, Grid } from "@material-ui/core";
 
@@ -12,11 +12,8 @@ const translateSeconds = (seconds) => {
 	const mins = Math.floor(seconds / 60).toFixed(0);
 	const _seconds = seconds % 60;
 
-	const secondsDisplay = `${mins < 10 ? "0" + mins : mins}:${_seconds < 10 ? "0" + _seconds : _seconds}`;
-
-	// setSecondsDisplay(secondsDisplay);
 	document.getElementById("secondsDisplay").innerHTML =
-		`${mins < 10 ? "0" + mins : mins}:${_seconds < 10 ? "0" + _seconds : _seconds}`;
+		`${mins < 10 ? "0" + mins : mins}:${_seconds < 10 ? "0" + _seconds : _seconds}`;;
 };
 
 class Countdown {
@@ -26,7 +23,6 @@ class Countdown {
 		this.counterEnd = options.onCounterEnd;
 		this.timer = {};
 		this.message = options.message;
-		this._instance = this;
 	}
 
 	decrementCounter() {
@@ -65,9 +61,9 @@ const setRoundMessage = (msg) => {
 	document.getElementById("roundMessage").innerHTML = msg;
 };
 
-const setSecondsDisplay = (seconds) => {
-	document.getElementById("secondsDisplay").innerHTML = seconds;
-};
+// const setSecondsDisplay = (seconds) => {
+// 	document.getElementById("secondsDisplay").innerHTML = seconds;
+// };
 
 const nextRound = () => {
 	if(myTimers.length > 0) {
@@ -117,9 +113,6 @@ function loadTimers() {
 }
 
 export function RoundTimer(props) {
-	// const [msg, setMsg] = useState(null);
-	const [seconds, setSeconds] = useState(0);
-
 	const classes = timerStyles();
 
 	useEffect(() => {
@@ -127,8 +120,6 @@ export function RoundTimer(props) {
 		setRoundMessage(currTimer.message);
 	}, []);
 
-	const handleReset = () => {
-	};
 
 	const handlePause = () => {
 		currTimer.stop();
@@ -139,7 +130,6 @@ export function RoundTimer(props) {
 			currTimer = loadTimers();
 		}
 
-		setSeconds(currTimer.seconds);
 		setRoundMessage(currTimer.message);
 		currTimer.start();
 	};
