@@ -1,23 +1,8 @@
-import React, { useState } from "react";
-import { useEffect, useRef, use } from "react";
-import clsx from "clsx";
-// import UIfx from "uifx";
-
-// import Config from "../../config";
-//
-// import Sound from 'react-sound';
-//
-// import bellAudio from "../../sounds/bell.mp3";
-// import longBellAudio from "../../sounds/long-bell.mp3";
-// import getReadyAudio from "../../sounds/get-ready.mp3";
-// import threeBellAudio from "../../sounds/3-bells.mp3";
+import React, { useState, useEffect } from "react";
 
 import { Button, Typography, Grid } from "@material-ui/core";
 
 import { timerStyles } from "../../styles/timer";
-// import {load} from "dotenv";
-
-// import { translateSeconds, getKeyByValue, loadAudioResource } from "../../selectors";
 
 
 
@@ -37,6 +22,7 @@ class Countdown {
 		this.updateStatus = options.onUpdateStatus;
 		this.counterEnd = options.onCounterEnd;
 		this.timer = {};
+		this.message = options.message;
 		this._instance = this;
 	}
 
@@ -54,7 +40,6 @@ class Countdown {
 	start() {
 		clearInterval(this.timer);
 		this.timer = 0;
-		// seconds = options.seconds;
 		this.timer = setInterval( () => {
 			this.decrementCounter();
 		}, 1000);
@@ -73,25 +58,20 @@ const myTimers = [];
 
 let currTimer = null;
 
+const setRoundMessage = (msg) => {
+	document.getElementById("roundMessage").innerHTML = msg;
+};
+
 const nextRound = () => {
-
-	console.log(myTimers);
-
 	if(myTimers.length > 0) {
 		currTimer = myTimers.shift();
+		setRoundMessage(currTimer.message);
 		currTimer.start();
-
-		// return myTimers.shift();
-		// currTimer.start();
 	} else {
 		currTimer.stop();
-		// loadTimers();
-		// currTimer = myTimers.shift();
 		console.log("fight ended.");
 	}
 };
-
-
 
 function loadTimers() {
 	let x = new Countdown({
@@ -100,7 +80,8 @@ function loadTimers() {
 		onCounterEnd: () => {
 			console.log("round ended");
 			nextRound();
-		}
+		},
+		message: "Get Ready!"
 	});
 
 	let y = new Countdown({
@@ -108,7 +89,8 @@ function loadTimers() {
 		onUpdateStatus: translateSeconds, 	// callback for each second
 		onCounterEnd: () => {
 			nextRound();
-		}
+		},
+		message: "Fight!",
 	});
 
 	let z = new Countdown({
@@ -116,7 +98,8 @@ function loadTimers() {
 		onUpdateStatus: translateSeconds, 	// callback for each second
 		onCounterEnd: () => {
 			nextRound();
-		}
+		},
+		message: "Break!",
 	});
 
 	myTimers.push(x);
@@ -126,10 +109,16 @@ function loadTimers() {
 	return myTimers.shift();
 }
 
-currTimer = loadTimers();
-
 export function RoundTimer(props) {
+	const [msg, setMsg] = useState(null);
+	const [seconds, setSeconds] = useState(0);
+
 	const classes = timerStyles();
+
+	useEffect(() => {
+		currTimer = loadTimers();
+		setRoundMessage(currTimer.message);
+	}, []);
 
 	const handleReset = () => {
 	};
@@ -143,11 +132,15 @@ export function RoundTimer(props) {
 			currTimer = loadTimers();
 		}
 
+		setSeconds(currTimer.seconds);
 		currTimer.start();
 	};
 
 	return (
         <Grid container className={classes.root} spacing={4} style={{border: "solid red 1px"}}>
+			<Grid item xs={12} className={classes.buttonRow}>
+				<Typography component="h5" variant="h5"><div id="roundMessage" /></Typography>
+			</Grid>
             <Grid item xs={12} className={classes.buttonRow}>
                     <div className={classes.buttonSpacer}>
                         <Button onClick={() => handlePause() }
@@ -160,9 +153,9 @@ export function RoundTimer(props) {
 
                     <div>
                         <Button onClick={() => { handleStart(); }}
-                                variant="contained"
-                                className={classes.start}
-                                disabled={false}
+								variant="contained"
+								className={classes.start}
+								disabled={false}
                         >
                             Start
                         </Button>
