@@ -13,12 +13,13 @@ import "react-toastify/dist/ReactToastify.css";
 // import ChangelogAppBar from "../AppBar/AppBar";
 // import ChangelogSideBar from "../Sidebar/Sidebar";
 // import { IdleTimeOutModal } from "../IdleTimeOutModal/IdleTimeOutModal";
-// import Footer from "../Footer/Footer";
+import Footer from "../Footer/Footer";
 import Dashboard from "../../pages/dashboard/Dashboard";
 // import Privacy from "../../pages/privacy/Privacy";
 // import Anomalies from "../../pages/anomalies/Anomalies";
 // import Firewall from "../../pages/firewall/Firewall";
 // import Hive from "../../pages/admin/hive/Hive";
+
 
 const ToastCloseButton = ({closeToast}) => <i onClick={closeToast} className="fa fa-times"/>;
 

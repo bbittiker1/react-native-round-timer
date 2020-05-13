@@ -59,3 +59,8 @@ export const THEME = {
 		brandDanger: "#EB3349"
 	}
 };
+
+
+export const MESSAGES = {
+	appName: "Boxing Round Timer"
+};

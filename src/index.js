@@ -10,9 +10,11 @@ import App from "./components/App";
 import reducers from "./reducers";
 
 import packageJson from "../package.json";
-
 import Config from "./config";
+
 Config.appVersion = packageJson.version;
+console.log("index: ", Config);
+
 
 // Add support for Chrome Redux DevTools.
 const composeEnhancers =
