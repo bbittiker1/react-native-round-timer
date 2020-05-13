@@ -8,5 +8,6 @@ export const constants = {
     },
     messages: {
         appName: "Boxing Round Timer"
-    }
+    },
+    oneSecondInMillis: 1000
 };

@@ -1,5 +1,4 @@
 import { createMuiTheme } from "@material-ui/core/styles";
-// import { DRAWER_WIDTH, THEME } from "../constants";
 
 export const theme = createMuiTheme({
 	root: {

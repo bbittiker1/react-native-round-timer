@@ -2,12 +2,12 @@ import React from "react";
 
 import { makeStyles } from "@material-ui/core/styles";
 
-import { RoundTimer} from "../../components/Timer/Timer";
-
+import { RoundTimer} from "../../components/Timer/RoundTimer";
 
 import { theme } from "../../styles/theme";
 import {Grid, Typography} from "@material-ui/core";
 import { constants } from "../../constants";
+import CountdownTimer from "../../components/Timer/CountdownTimer";
 
 const useStyles = makeStyles(theme => ({
 	control: {
@@ -21,6 +21,34 @@ const useStyles = makeStyles(theme => ({
 		padding: '2px'
 	},
 }));
+
+const loadTimers = () => {
+	const t = [];
+
+	const x = new CountdownTimer({
+		seconds: 5,  // number of seconds to count down
+		message: "Get Ready!",
+		type: "ready"
+	});
+
+	const y = new CountdownTimer({
+		seconds: 6,  						// number of seconds to count down
+		message: "Fight!",
+		type: "fight"
+	});
+
+	const z = new CountdownTimer({
+		seconds: 7,  						// number of seconds to count down
+		message: "Break!",
+		type: "break"
+	});
+
+	t.push(x, y, z);
+
+	return t;
+};
+
+let timers = loadTimers();
 
 
 export default function Dashboard() {
@@ -37,13 +65,8 @@ export default function Dashboard() {
 				<Typography component="h5" variant="h5">{numRounds} Rounds</Typography>
 			</Grid>
 			<Grid item xs={12}>
-				<RoundTimer />
+				<RoundTimer timers={timers} reloadTimers={ () => loadTimers }/>
 			</Grid>
-			{/*<Grid item xs={12}>*/}
-			{/*	<Typography component="h6" variant="h6">{ `Rounds ${ translateSeconds(roundSeconds)} / Notice ${roundNotifySeconds}s` }</Typography>*/}
-			{/*	<Typography component="h6" variant="h6">{ `Breaks ${ translateSeconds(breakSeconds)} / Notice ${breakNotifySeconds}s` }</Typography>*/}
-			{/*	<Typography component="h6" variant="h6">Total Fight Seconds: { numRounds * roundSeconds }</Typography>*/}
-			{/*</Grid>*/}
 		</Grid>
 	);
 }

@@ -1,11 +1,29 @@
-import React, { useEffect } from "react";
-
+import React, { useEffect, useState, useRef } from "react";
 import { Button, Typography, Grid } from "@material-ui/core";
-
 import { timerStyles } from "../../styles/timer";
 
 
+const useInterval = (callback, delay) => {
+	const savedCallback = useRef();
 
+	// Remember the latest function.
+	useEffect(() => {
+		savedCallback.current = callback;
+	}, [callback]);
+
+	// Set up the interval.
+	useEffect(() => {
+		function tick() {
+			savedCallback.current();
+		}
+
+		if (delay !== null ) {
+			let id = setInterval(tick, delay);
+			return () => clearInterval(id);
+		}
+
+	}, [delay]);
+};
 
 
 const translateSeconds = (seconds) => {
@@ -13,10 +31,16 @@ const translateSeconds = (seconds) => {
 	const _seconds = seconds % 60;
 
 	document.getElementById("secondsDisplay").innerHTML =
-		`${mins < 10 ? "0" + mins : mins}:${_seconds < 10 ? "0" + _seconds : _seconds}`;;
+		`${mins < 10 ? "0" + mins : mins}:${_seconds < 10 ? "0" + _seconds : _seconds}`;
 };
 
-class Countdown {
+const getFightEnded = () => {
+	console.log("ended");
+
+	return (myTimers.length === 0 )
+};
+
+class CountdownTimer {
 	constructor(options) {
 		this.seconds = options.seconds;
 		this.updateStatus = options.onUpdateStatus;
@@ -57,13 +81,11 @@ const myTimers = [];
 
 let currTimer = null;
 
+let complete = false;
+
 const setRoundMessage = (msg) => {
 	document.getElementById("roundMessage").innerHTML = msg;
 };
-
-// const setSecondsDisplay = (seconds) => {
-// 	document.getElementById("secondsDisplay").innerHTML = seconds;
-// };
 
 const nextRound = () => {
 	if(myTimers.length > 0) {
@@ -71,38 +93,43 @@ const nextRound = () => {
 		setRoundMessage(currTimer.message);
 		currTimer.start();
 	} else {
-		// currTimer.stop();
+		getFightEnded();
+		complete = true;
 		setRoundMessage("Fight ended!");
 	}
 };
 
 function loadTimers() {
-	let x = new Countdown({
+	const x = new CountdownTimer({
 		seconds: 5,  // number of seconds to count down
 		onUpdateStatus: translateSeconds,
 		onCounterEnd: () => {
-			console.log("round ended");
+			console.log("Round ended!");
 			nextRound();
 		},
-		message: "Get Ready!"
+		message: "Get Ready!",
+		type: "ready"
 	});
 
-	let y = new Countdown({
+	const y = new CountdownTimer({
 		seconds: 3,  						// number of seconds to count down
 		onUpdateStatus: translateSeconds, 	// callback for each second
 		onCounterEnd: () => {
+			console.log("Round ended!");
 			nextRound();
 		},
 		message: "Fight!",
+		type: "fight"
 	});
 
-	let z = new Countdown({
+	const z = new CountdownTimer({
 		seconds: 3,  						// number of seconds to count down
 		onUpdateStatus: translateSeconds, 	// callback for each second
 		onCounterEnd: () => {
 			nextRound();
 		},
 		message: "Break!",
+		type: "break"
 	});
 
 	myTimers.push(x);
@@ -113,24 +140,63 @@ function loadTimers() {
 }
 
 export function RoundTimer(props) {
+	const [isPaused, setPaused] = useState(false);
+	const [isStarted, setStarted] = useState(false );
+	const [isOver, setOver] = useState( getFightEnded() );
+
+	const [currTimer, setCurrTimer] = useState(myTimers.shift());
+
+
+	// const [seconds, setSeconds] = useState(myTimers.shift().seconds);
+
+	const ref = useRef(currTimer);
+
+
+	// const timers = useRef(myTimers);
+
 	const classes = timerStyles();
 
+	const ticker = (cb) => {
+		// console.log("tick", t.length);
+
+		if (cb.call()) {
+			console.log("fight over");
+
+			setStarted(false);
+		}
+	};
+
+	useInterval(() => ticker(getFightEnded), 1000 );
+
 	useEffect(() => {
-		currTimer = loadTimers();
+		// currTimer = loadTimers();
 		setRoundMessage(currTimer.message);
 	}, []);
 
+	useEffect(() => {
+		console.log(isOver);
+		setStarted(false);
+
+	}, [isOver]);
+
 
 	const handlePause = () => {
-		currTimer.stop();
+		setPaused(!isPaused);
+
+		if(isPaused) {
+			currTimer.start();
+		} else {
+			currTimer.stop();
+		}
 	};
 
 	const handleStart = () => {
-		if(myTimers.length === 0) {
-			currTimer = loadTimers();
-		}
-
-		setRoundMessage(currTimer.message);
+		// if(myTimers.length === 0) {
+		// 	currTimer = loadTimers();
+		// }
+		//
+		// setStarted(true);
+		// setRoundMessage(currTimer.message);
 		currTimer.start();
 	};
 
@@ -145,16 +211,15 @@ export function RoundTimer(props) {
                                 variant="contained"
                                 className={classes.pause}
                                 disabled={false}>
-                          	Pause
+							{ isPaused ? "Resume" : "Pause" }
                         </Button>
                     </div>
 
                     <div>
-                        <Button onClick={() => { handleStart(); }}
+                        <Button onClick={() => handleStart()}
 								variant="contained"
 								className={classes.start}
-								disabled={false}
-                        >
+								disabled={isStarted}>
                             Start
                         </Button>
                     </div>
@@ -162,7 +227,8 @@ export function RoundTimer(props) {
 
 			<Grid item xs={12}>
 				<Typography component="h6" variant="h6" >
-					<div id="secondsDisplay" />
+					{/*<div id="secondsDisplay" />*/}
+					{ref.seconds}
 				</Typography>
 			</Grid>
         </Grid>
